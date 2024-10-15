@@ -1,0 +1,41 @@
+version: '3.9'
+services:
+  restaurant_db:
+    container_name: ${CONTAINER_NAME}
+    hostname: ${HOSTNAME}
+    user: ${TYPE_USER}
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: always
+    environment:
+      ACCEPT_EULA: ${ACCEPT_EULA}
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      MSSQL_DATA_DIR: ${MSSQL_DATA_DIR}
+      MSSQL_PID: ${MSSQL_PID}
+      MSSQL_TCP_PORT: ${MSSQL_TCP_PORT}
+    ports:
+      - "${EXPORT_PORT}:${MSSQL_TCP_PORT}"
+    volumes:
+      - volume-database:/var/opt/mssql/data
+      - logs-database:/var/opt/mssql/log
+      - secrets-database:/var/opt/mssql/secrets
+      - ./db-init.sql:/db-init.sql
+      - ./db-init.sh:/db-init.sh
+      - ./entrypoint.sh:/entrypoint.sh
+    command: /bin/bash ./entrypoint.sh
+  app:
+    container_name: my_spring_boot_app
+    image: my-spring-boot-app
+    depends_on:
+      - restaurant_db
+    build:
+      context: ..
+      dockerfile: config/Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    volumes:
+      - .env:/app/.env
+volumes:
+  volume-database:
+  secrets-database:
+  logs-database:

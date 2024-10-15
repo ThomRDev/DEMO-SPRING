@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: "jdbc:sqlserver://restaurant_db;databaseName=RestaurantDb;trustServerCertificate=true;multipleActiveResultSets=true"
+    username: "sa"
+    password: "Admin@123"
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
