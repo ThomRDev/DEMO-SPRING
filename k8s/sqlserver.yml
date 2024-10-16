@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlserver-deployment
+  labels:
+    app: sqlserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqlserver
+  template:
+    metadata:
+      labels:
+        app: sqlserver
+    spec:
+      containers:
+      - name: sqlserver
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+        env:
+        - name: ACCEPT_EULA
+          valueFrom:
+            secretKeyRef:
+              name: sqlserver-secrets
+              key: ACCEPT_EULA
+        - name: MSSQL_SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sqlserver-secrets
+              key: MSSQL_SA_PASSWORD
+        - name: MSSQL_DATA_DIR
+          valueFrom:
+            secretKeyRef:
+              name: sqlserver-secrets
+              key: MSSQL_DATA_DIR
+        - name: MSSQL_PID
+          valueFrom:
+            secretKeyRef:
+              name: sqlserver-secrets
+              key: MSSQL_PID
+        - name: MSSQL_TCP_PORT
+          valueFrom:
+            secretKeyRef:
+              name: sqlserver-secrets
+              key: MSSQL_TCP_PORT
+        volumeMounts:
+        - name: sqlserver-data
+          mountPath: /var/opt/mssql/data
+        - name: sqlserver-logs
+          mountPath: /var/opt/mssql/log
+        - name: db-init-volume
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: sqlserver-data
+        emptyDir: {}
+      - name: sqlserver-logs
+        emptyDir: {}
+      - name: db-init-volume
+        configMap:
+          name: db-init-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlserver-service
+spec:
+  selector:
+    app: sqlserver
+  ports:
+  - protocol: TCP
+    port: 1433
+    targetPort: 1433
